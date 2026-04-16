@@ -1,16 +1,16 @@
-# Bennettp123 Aws-session-manager-plugin-tap
+# AWS session-manager-plugin
 
 ## How do I install these formulae?
 
-`brew install bennettp123/aws-session-manager-plugin-tap/<formula>`
+`brew install bennettp123/aws-session-manager-plugin-tap/aws-session-manager-plugin`
 
-Or `brew tap bennettp123/aws-session-manager-plugin-tap` and then `brew install <formula>`.
+Or `brew tap bennettp123/aws-session-manager-plugin-tap` and then `brew install --cask aws-session-manager-plugin`.
 
 Or, in a `brew bundle` `Brewfile`:
 
 ```ruby
 tap "bennettp123/aws-session-manager-plugin-tap"
-brew "<formula>"
+cask "aws-session-manager-plugin"
 ```
 
 ## Documentation
