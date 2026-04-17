@@ -52,7 +52,7 @@ jobs:
       - name: Configure Git user
         uses: Homebrew/actions/git-user-config@main
         with:
-          username: ${{ steps.get-user-id.outputs.user-id }}
+          username: ${{ steps.get-user-id.outputs.user-name }}
 
       - name: Set up commit signing
         uses: Homebrew/actions/setup-commit-signing@main
