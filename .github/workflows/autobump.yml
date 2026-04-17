@@ -1,0 +1,77 @@
+name: Bump casks on schedule or request
+
+# Loosely based on [Homebrew/homebrew-cask/autobump.yml][1]
+# 
+# [1]: https://github.com/Homebrew/homebrew-cask/blob/434120cfdca0e4628c7087605e82e3db51bd0690/.github/workflows/autobump.yml
+#
+
+on:
+  workflow_dispatch:
+    inputs:
+      casks:
+        description: Custom list of casks to livecheck and bump if outdated
+        required: false
+  schedule:
+    # Every 3 hours 23 minutes past the hour
+    - cron: "23 */3 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  autobump:
+    if: github.repository == 'bennettp123/aws-session-manager-plugin-tap'
+    env:
+      HOMEBREW_DEVELOPER: 1
+    runs-on: macos-26
+    steps:
+      - name: Set up Homebrew
+        id: set-up-homebrew
+        uses: Homebrew/actions/setup-homebrew@main
+        with:
+          core: true
+          cask: true
+
+      - name: Get Token
+        uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          client-id: ${{ vars.APP_CLIENT_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Get GitHub App User ID
+        id: get-user-id
+        run: |
+          USER_NAME='${{ (github.event_name == 'workflow_dispatch' && github.actor) || format('%s[bot]', steps.app-token.outputs.app-slug) }}'
+          USER_ID="$(gh api "/users/${USER_NAME}" --jq .id)"
+          echo "user-name=${USER_NAME}" >> "{$GITHUB_OUTPUT}"
+          echo "user-id=${USER_ID}" >> "${GITHUB_OUTPUT}"
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+
+      - name: Configure Git user
+        uses: Homebrew/actions/git-user-config@main
+        with:
+          username: ${{ steps.get-user-id.outputs.user-id }}
+
+      - name: Set up commit signing
+        uses: Homebrew/actions/setup-commit-signing@main
+        with:
+          signing_key: ${{ secrets.BREWTESTBOT_SSH_SIGNING_KEY }}
+
+      - name: Bump casks
+        id: autobump
+        env:
+          HOMEBREW_TEST_BOT_AUTOBUMP: 1
+          HOMEBREW_GITHUB_API_TOKEN: ${{ steps.app-token.outputs.token }}
+          HOMEBREW_GIT_COMMITTER_NAME: bbrewbot[bot]
+          HOMEBREW_GIT_COMMITTER_EMAIL: 276813860+bbrewbot[bot]@users.noreply.github.com
+          CASKS: ${{ inputs.casks }}
+        continue-on-error: true
+        run: |
+          BREW_BUMP=(brew bump --no-fork --open-pr --casks)
+          if [[ -n "${CASKS-}" ]]; then
+            xargs "${BREW_BUMP[@]}" <<<"${CASKS}"
+          else
+            "${BREW_BUMP[@]}" --auto --tap=bennettp123/aws-session-manager-plugin-tap
+          fi
