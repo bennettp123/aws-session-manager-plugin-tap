@@ -44,7 +44,7 @@ jobs:
         run: |
           USER_NAME='${{ (github.event_name == 'workflow_dispatch' && github.actor) || format('%s[bot]', steps.app-token.outputs.app-slug) }}'
           USER_ID="$(gh api "/users/${USER_NAME}" --jq .id)"
-          echo "user-name=${USER_NAME}" >> "{$GITHUB_OUTPUT}"
+          echo "user-name=${USER_NAME}" >> "${GITHUB_OUTPUT}"
           echo "user-id=${USER_ID}" >> "${GITHUB_OUTPUT}"
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
